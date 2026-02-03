@@ -4,6 +4,7 @@ import { testUser } from "src/users/tests/user-seeds";
 import { InMemoryWebinarRepository } from "src/webinars/adapters/webinar-repository.in-memory";
 import { ChangeSeats } from "./change-seats";
 import { Webinar } from "../entities/webinar.entity";
+import { WebinarNotFoundException } from "src/webinars/exceptions/webinar-not-found";
 
 describe('Feature : Change seats', () => {
   // Initialisation de nos tests, boilerplates...
@@ -39,4 +40,23 @@ describe('Feature : Change seats', () => {
       expect(updatedWebinar?.props.seats).toEqual(200);
     });
   });
+
+  describe('Scenario: webinar does not exist', () => {
+    const payload = {
+    user: testUser.alice,
+    webinarId: 'unknown-webinar-id',
+    seats: 200,
+  };
+
+  it('should fail if webinar does not exist', async () => {
+    // ACT + ASSERT
+    await expect(useCase.execute(payload)).rejects.toThrow(
+      WebinarNotFoundException
+    );
+
+    // ASSERT : le webinaire initial n’a pas été modifié
+    const webinar = webinarRepository.findByIdSync('webinar-id');
+    expect(webinar?.props.seats).toEqual(100);
+  });
+});
 });
