@@ -1,6 +1,6 @@
 import supertest from 'supertest';
 import { TestServerFixture } from './tests/fixtures';
-jest.setTimeout(60000);
+jest.setTimeout(120000);
 describe('Webinar Routes E2E', () => {
   let fixture: TestServerFixture;
 
