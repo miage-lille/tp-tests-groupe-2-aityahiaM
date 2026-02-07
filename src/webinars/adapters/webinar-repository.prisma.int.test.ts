@@ -96,4 +96,27 @@ describe('PrismaWebinarRepository', () => {
       expect(found?.props.seats).toBe(100);
     });
   });
+
+  describe('Scenario : repository.update', () => {
+    it('should update a webinar', async () => {
+      const webinar = new Webinar({
+        id: 'webinar-2',
+        organizerId: 'alice-id',
+        title: 'Webinar Update Test',
+        startDate: new Date('2022-01-01T00:00:00Z'),
+        endDate: new Date('2022-01-01T01:00:00Z'),
+        seats: 100,
+      });
+
+      await repository.create(webinar);
+
+      webinar.update({ seats: 200 });
+      await repository.update(webinar);
+
+      const updated = await prismaClient.webinar.findUnique({
+        where: { id: 'webinar-2' },
+      });
+      expect(updated?.seats).toBe(200);
+    });
+  });
 });
