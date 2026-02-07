@@ -75,4 +75,25 @@ describe('PrismaWebinarRepository', () => {
       });
     });
   });
+
+  describe('Scenario : repository.findById', () => {
+    it('should find a webinar by id', async () => {
+      const webinar = new Webinar({
+        id: 'webinar-1',
+        organizerId: 'alice-id',
+        title: 'Webinar Find Test',
+        startDate: new Date('2022-01-01T00:00:00Z'),
+        endDate: new Date('2022-01-01T01:00:00Z'),
+        seats: 100,
+      });
+
+      await repository.create(webinar);
+
+      const found = await repository.findById('webinar-1');
+
+      expect(found?.props.id).toBe('webinar-1');
+      expect(found?.props.title).toBe('Webinar Find Test');
+      expect(found?.props.seats).toBe(100);
+    });
+  });
 });
