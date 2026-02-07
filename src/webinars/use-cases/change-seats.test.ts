@@ -7,6 +7,7 @@ import { Webinar } from '../entities/webinar.entity';
 import { WebinarNotFoundException } from 'src/webinars/exceptions/webinar-not-found';
 import { WebinarNotOrganizerException } from 'src/webinars/exceptions/webinar-not-organizer';
 import { WebinarReduceSeatsException } from '../exceptions/webinar-reduce-seats';
+import { WebinarTooManySeatsException } from '../exceptions/webinar-too-many-seats';
 describe('Feature : Change seats', () => {
   // Initialisation de nos tests, boilerplates...
   let webinarRepository: InMemoryWebinarRepository;
@@ -90,6 +91,25 @@ describe('Feature : Change seats', () => {
         // ACT + ASSERT
         await expect(useCase.execute(payload)).rejects.toThrow(
           WebinarReduceSeatsException,
+        );
+
+        // ASSERT : le webinaire n’a pas été modifié
+        const webinar = webinarRepository.findByIdSync('webinar-id');
+        expect(webinar?.props.seats).toEqual(100);
+      });
+    });
+
+    describe('Scenario: change seat to a number > 1000', () => {
+      const payload = {
+        user: testUser.alice,
+        webinarId: 'webinar-id',
+        seats: 1500, //supérieur à 1000
+      };
+
+      it('should fail if seats number is greater than 1000', async () => {
+        // ACT + ASSERT
+        await expect(useCase.execute(payload)).rejects.toThrow(
+          WebinarTooManySeatsException,
         );
 
         // ASSERT : le webinaire n’a pas été modifié
