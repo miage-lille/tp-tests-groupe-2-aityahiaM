@@ -1,11 +1,11 @@
 // Tests unitaires
 
-import { testUser } from "src/users/tests/user-seeds";
-import { InMemoryWebinarRepository } from "src/webinars/adapters/webinar-repository.in-memory";
-import { ChangeSeats } from "./change-seats";
-import { Webinar } from "../entities/webinar.entity";
-import { WebinarNotFoundException } from "src/webinars/exceptions/webinar-not-found";
-
+import { testUser } from 'src/users/tests/user-seeds';
+import { InMemoryWebinarRepository } from 'src/webinars/adapters/webinar-repository.in-memory';
+import { ChangeSeats } from './change-seats';
+import { Webinar } from '../entities/webinar.entity';
+import { WebinarNotFoundException } from 'src/webinars/exceptions/webinar-not-found';
+import { WebinarNotOrganizerException } from 'src/webinars/exceptions/webinar-not-organizer';
 describe('Feature : Change seats', () => {
   // Initialisation de nos tests, boilerplates...
   let webinarRepository: InMemoryWebinarRepository;
@@ -23,7 +23,7 @@ describe('Feature : Change seats', () => {
   beforeEach(() => {
     webinarRepository = new InMemoryWebinarRepository([webinar]);
     useCase = new ChangeSeats(webinarRepository);
-});
+  });
 
   describe('Scenario: Happy path', () => {
     // Code commun à notre scénario : payload...
@@ -33,7 +33,7 @@ describe('Feature : Change seats', () => {
       seats: 200,
     };
     it('should change the number of seats for a webinar', async () => {
-     // Vérification de la règle métier, condition testée...
+      // Vérification de la règle métier, condition testée...
       await useCase.execute(payload);
       // ASSERT
       const updatedWebinar = await webinarRepository.findById('webinar-id');
@@ -43,20 +43,39 @@ describe('Feature : Change seats', () => {
 
   describe('Scenario: webinar does not exist', () => {
     const payload = {
-    user: testUser.alice,
-    webinarId: 'unknown-webinar-id',
-    seats: 200,
-  };
+      user: testUser.alice,
+      webinarId: 'unknown-webinar-id',
+      seats: 200,
+    };
 
-  it('should fail if webinar does not exist', async () => {
-    // ACT + ASSERT
-    await expect(useCase.execute(payload)).rejects.toThrow(
-      WebinarNotFoundException
-    );
+    it('should fail if webinar does not exist', async () => {
+      // ACT + ASSERT
+      await expect(useCase.execute(payload)).rejects.toThrow(
+        WebinarNotFoundException,
+      );
 
-    // ASSERT : le webinaire initial n’a pas été modifié
-    const webinar = webinarRepository.findByIdSync('webinar-id');
-    expect(webinar?.props.seats).toEqual(100);
+      // ASSERT : le webinaire initial n’a pas été modifié
+      const webinar = webinarRepository.findByIdSync('webinar-id');
+      expect(webinar?.props.seats).toEqual(100);
+    });
+
+    describe('Scenario: update the webinar of someone else', () => {
+      const payload = {
+        user: testUser.bob,
+        webinarId: 'webinar-id',
+        seats: 200,
+      };
+
+      it('should fail if user is not the organizer', async () => {
+        // ACT + ASSERT
+        await expect(useCase.execute(payload)).rejects.toThrow(
+          WebinarNotOrganizerException,
+        );
+
+        // ASSERT : le webinaire n’a pas été modifié
+        const webinar = webinarRepository.findByIdSync('webinar-id');
+        expect(webinar?.props.seats).toEqual(100);
+      });
+    });
   });
-});
 });
