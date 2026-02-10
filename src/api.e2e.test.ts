@@ -91,4 +91,68 @@ describe('Webinar Routes E2E', () => {
       error: 'User is not allowed to update this webinar'
     });
   });
+  
+  //BONUS 
+  it('should demonstrate full webinar lifecycle with authorized user (E2E bonus)', async () => {
+    // ARRANGE
+    const prisma = fixture.getPrismaClient();
+    const server = fixture.getServer();
+    const webinar = await prisma.webinar.create({
+      data: {
+        id: 'lifecycle-bonus-webinar',
+        title: 'Full Lifecycle Webinar Bonus',
+        seats: 50,
+        startDate: new Date('2024-12-01T10:00:00Z'),
+        endDate: new Date('2024-12-01T12:00:00Z'),
+        organizerId: 'test-user',
+      },
+    });
+  
+    expect(webinar.seats).toBe(50);
+
+    const response1 = await supertest(server)
+      .post(`/webinars/${webinar.id}/seats`)
+      .send({ seats: '75' })
+      .expect(200);
+    
+    expect(response1.body).toEqual({ message: 'Seats updated' });
+  
+    const afterFirstUpdate = await prisma.webinar.findUnique({
+      where: { id: webinar.id },
+    });
+    expect(afterFirstUpdate?.seats).toBe(75);
+
+    const response2 = await supertest(server)
+      .post(`/webinars/${webinar.id}/seats`)
+      .send({ seats: '100' })
+      .expect(200);
+    
+    expect(response2.body).toEqual({ message: 'Seats updated' });
+  
+    const finalWebinar = await prisma.webinar.findUnique({
+      where: { id: webinar.id },
+    });
+    expect(finalWebinar?.seats).toBe(100);
+  
+    const unauthorizedWebinar = await prisma.webinar.create({
+      data: {
+        id: 'unauth-lifecycle',
+        title: 'Unauthorized Lifecycle Test',
+        seats: 30,
+        startDate: new Date(),
+        endDate: new Date(),
+        organizerId: 'different-organizer',
+      },
+    });
+  
+    const unauthorizedResponse = await supertest(server)
+      .post(`/webinars/${unauthorizedWebinar.id}/seats`)
+      .send({ seats: '50' })
+      .expect(401);
+    
+    expect(unauthorizedResponse.body).toEqual({
+      error: 'User is not allowed to update this webinar'
+    });
+  });
+  
 });

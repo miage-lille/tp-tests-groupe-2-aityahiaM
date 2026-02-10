@@ -119,4 +119,34 @@ describe('PrismaWebinarRepository', () => {
       expect(updated?.seats).toBe(200);
     });
   });
+
+  //BONUS 
+  describe('Scenario : organize-webinar integration flow', () => {
+    it('should test complete organize-webinar flow (integration)', async () => {
+      const webinar = new Webinar({
+        id: 'organized-flow-id',
+        organizerId: 'flow-organizer',
+        title: 'Complete Flow Webinar',
+        startDate: new Date('2024-12-20T10:00:00Z'),
+        endDate: new Date('2024-12-20T13:00:00Z'), 
+        seats: 200,
+      });
+      await repository.create(webinar);
+      const persisted = await prismaClient.webinar.findUnique({
+        where: { id: 'organized-flow-id' },
+      });
+    
+      expect(persisted).toBeDefined();
+      expect(persisted!.seats).toBeGreaterThanOrEqual(1);
+      expect(persisted!.seats).toBeLessThanOrEqual(1000);
+      const durationMs = persisted!.endDate.getTime() - persisted!.startDate.getTime();
+      const durationHours = durationMs / (1000 * 60 * 60);
+      expect(durationHours).toBeGreaterThanOrEqual(0.5); 
+      expect(durationHours).toBeLessThanOrEqual(3); 
+      expect(persisted!.endDate > persisted!.startDate).toBe(true);
+      const retrieved = await repository.findById('organized-flow-id');
+      expect(retrieved?.props.title).toBe('Complete Flow Webinar');
+  
+  });
+});
 });
