@@ -33,7 +33,7 @@ export class TestServerFixture {
       },
     });
 
-    await asyncExec(`DATABASE_URL=${dbUrl} npx prisma migrate deploy`);
+    await asyncExec(`npx cross-env DATABASE_URL=${dbUrl} npx prisma migrate deploy`);
     await this.prismaClient.$connect();
 
     // Initialiser le conteneur avec Prisma

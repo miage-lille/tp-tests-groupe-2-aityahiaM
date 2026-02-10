@@ -30,7 +30,7 @@ describe('PrismaWebinarRepository', () => {
     });
 
     // Run migrations to populate the database
-    await asyncExec(`DATABASE_URL=${dbUrl} npx prisma migrate deploy`);
+    await asyncExec(`npx cross-env DATABASE_URL=${dbUrl} npx prisma migrate deploy`);
 
     return prismaClient.$connect();
   });
